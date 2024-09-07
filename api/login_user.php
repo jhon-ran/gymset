@@ -4,27 +4,33 @@ include('../includes/db.php');
 $email = $_POST['email'];
 $password = $_POST['password'];
 
-// Consulta para obtener el usuario con el correo proporcionado
-$sql = "SELECT * FROM users WHERE email='$email'";
-$result = $conn->query($sql);
+try {
+    // Preparar la consulta SQL con PDO
+    $stmt = $conn->prepare("SELECT * FROM users WHERE email = :email");
+    $stmt->bindParam(':email', $email);
+    $stmt->execute();
 
-if ($result->num_rows > 0) {
-    $user = $result->fetch_assoc();
-    // Verificar si la contraseña ingresada coincide con la almacenada
-    if (password_verify($password, $user['password'])) {
-        session_start();
-        $_SESSION['user_id'] = $user['id'];  // Guardar el ID del usuario en la sesión
-        header("Location: ../views/dashboard.php");
-        exit();
+    // Obtener el usuario correspondiente
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($user) {
+        // Verificar la contraseña ingresada
+        if (password_verify($password, $user['password'])) {
+            session_start();
+            $_SESSION['user_id'] = $user['id'];
+            header("Location: ../views/dashboard.php");
+            exit();
+        } else {
+            header("Location: ../views/login.php?error=Contraseña incorrecta");
+            exit();
+        }
     } else {
-        header("Location: ../views/login.php?error=Contraseña incorrecta");
+        header("Location: ../views/login.php?error=No existe un usuario con ese correo electrónico");
         exit();
     }
-} else {
-    header("Location: ../views/login.php?error=No existe un usuario con ese correo electrónico");
-    exit();
+} catch (PDOException $e) {
+    echo "Error: " . $e->getMessage();
 }
-
-$conn->close();
 ?>
+
 

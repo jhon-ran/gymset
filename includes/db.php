@@ -1,15 +1,16 @@
 <?php
-// includes/db.php
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "gymset"; // Nombre de la base de datos
+// Configuración de la base de datos
+$host = 'localhost';
+$dbname = 'gymset';
+$username = 'usuario';
+$password = 'contraseña';
 
-// Crear conexión
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Verificar conexión
-if ($conn->connect_error) {
-    die("Conexión fallida: " . $conn->connect_error);
+try {
+    // Creación de la conexión PDO
+    $conn = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    // Configurar el modo de error de PDO para excepciones
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Error de conexión: " . $e->getMessage());
 }
 ?>

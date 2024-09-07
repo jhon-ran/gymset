@@ -3,57 +3,45 @@ include('../includes/header.php');
 include('../includes/db.php');
 session_start();
 
-// Verificar si el usuario ha iniciado sesión
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
 
-// Obtener la información del usuario
 $user_id = $_SESSION['user_id'];
-$sql = "SELECT name FROM users WHERE id='$user_id'";
-$result = $conn->query($sql);
-$user = $result->fetch_assoc();
+
+// Obtener información del usuario
+$stmt = $conn->prepare("SELECT * FROM users WHERE id = :id");
+$stmt->bindParam(':id', $user_id);
+$stmt->execute();
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
 ?>
 
 <body>
 <div class="container">
-  <!-- Saludo de bienvenida -->
-  <h2>Bienvenido, <?php echo htmlspecialchars($user['name']); ?>!</h2>
-  <p>Desde aquí puedes gestionar tus rutinas de ejercicio y seguir tu progreso.</p>
-  
-  <!-- Opciones del Dashboard -->
+  <div class="d-flex justify-content-between align-items-center mt-3">
+    <h2>Bienvenido, <?php echo htmlspecialchars($user['name']); ?>!</h2>
+    <a href="../api/logout.php" class="btn btn-danger">Cerrar sesión</a>
+  </div>
+  <p>Aquí puedes gestionar tus rutinas de ejercicio y revisar tu progreso.</p>
+
   <div class="row">
-    <div class="col-md-4">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Crear Nueva Rutina</h5>
-          <p class="card-text">Crea una nueva rutina semanal y asigna ejercicios.</p>
-          <a href="create_routine.php" class="btn btn-primary">Crear Rutina</a>
-        </div>
-      </div>
+    <div class="col-md-6">
+      <h4>Gestión de Rutinas</h4>
+      <ul class="list-group">
+        <li class="list-group-item"><a href="create_routine.php">Crear Nueva Rutina Semanal</a></li>
+        <li class="list-group-item"><a href="view_progress.php">Ver Progreso</a></li>
+      </ul>
     </div>
-
-    <div class="col-md-4">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Ver Progreso</h5>
-          <p class="card-text">Consulta tu progreso semanal y ve tus estadísticas de rendimiento.</p>
-          <a href="view_progress.php" class="btn btn-primary">Ver Progreso</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-4">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Cerrar Sesión</h5>
-          <p class="card-text">Finaliza tu sesión de manera segura.</p>
-          <a href="../api/logout.php" class="btn btn-danger">Cerrar Sesión</a>
-        </div>
-      </div>
+    <div class="col-md-6">
+      <h4>Gestión de Ejercicios</h4>
+      <ul class="list-group">
+        <li class="list-group-item"><a href="create_exercise.php">Agregar Nuevo Ejercicio</a></li>
+        <li class="list-group-item"><a href="view_exercises.php">Ver y Editar Ejercicios</a></li>
+      </ul>
     </div>
   </div>
 </div>
+
 <?php include('../includes/footer.php'); ?>
 </body>

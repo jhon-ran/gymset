@@ -5,32 +5,51 @@ session_start();
 $user_id = $_SESSION['user_id'];
 $week_start_date = $_POST['week_start_date'];
 
-// Insertar rutina semanal
-$sql_weekly_routine = "INSERT INTO weekly_routines (user_id, week_start_date) VALUES ('$user_id', '$week_start_date')";
-$conn->query($sql_weekly_routine);
-$weekly_routine_id = $conn->insert_id;
+try {
+    // Comenzar una transacción
+    $conn->beginTransaction();
 
-// Insertar rutinas diarias y ejercicios
-$days_of_week = 7;
-for ($i = 0; $i < $days_of_week; $i++) {
-    $day_of_week = $i + 1;
-    
-    // Insertar rutina diaria
-    $sql_daily_routine = "INSERT INTO daily_routines (weekly_routine_id, day_of_week) VALUES ('$weekly_routine_id', '$day_of_week')";
-    $conn->query($sql_daily_routine);
-    $daily_routine_id = $conn->insert_id;
+    // Insertar la nueva rutina semanal
+    $stmt = $conn->prepare("INSERT INTO weekly_routines (user_id, week_start_date) VALUES (:user_id, :week_start_date)");
+    $stmt->bindParam(':user_id', $user_id);
+    $stmt->bindParam(':week_start_date', $week_start_date);
+    $stmt->execute();
+    $weekly_routine_id = $conn->lastInsertId();
 
-    // Obtener ejercicios seleccionados para el día
-    $exercises = $_POST["exercises_$i"];
-    $repetitions = $_POST["repetitions_$i"];
-    $weight = $_POST["weight_$i"];
+    // Iterar sobre los días de la semana
+    for ($i = 0; $i < 7; $i++) {
+        // Insertar una rutina diaria para cada día de la semana
+        $stmt = $conn->prepare("INSERT INTO daily_routines (weekly_routine_id, day_of_week) VALUES (:weekly_routine_id, :day_of_week)");
+        $stmt->bindParam(':weekly_routine_id', $weekly_routine_id);
+        $stmt->bindParam(':day_of_week', $i + 1);
+        $stmt->execute();
+        $daily_routine_id = $conn->lastInsertId();
 
-    // Insertar cada ejercicio en la rutina diaria
-    foreach ($exercises as $exercise_id) {
-        $sql_routine_exercise = "INSERT INTO routine_exercises (daily_routine_id, exercise_id, repetitions, weight) VALUES ('$daily_routine_id', '$exercise_id', '$repetitions', '$weight')";
-        $conn->query($sql_routine_exercise);
+        // Obtener los sets y repeticiones para este día
+        $sets = $_POST['sets_day_' . $i];
+        $repetitions = $_POST['repetitions_day_' . $i];
+
+        // Procesar los ejercicios seleccionados para ese día
+        if (isset($_POST['exercises_' . $i])) {
+            foreach ($_POST['exercises_' . $i] as $exercise_id) {
+                // Insertar los ejercicios en la rutina diaria
+                $stmt = $conn->prepare("INSERT INTO routine_exercises (daily_routine_id, exercise_id, repetitions, weight) 
+                                        VALUES (:daily_routine_id, :exercise_id, :repetitions, 0)");
+                $stmt->bindParam(':daily_routine_id', $daily_routine_id);
+                $stmt->bindParam(':exercise_id', $exercise_id);
+                $stmt->bindParam(':repetitions', $repetitions);
+                $stmt->execute();
+            }
+        }
     }
-}
 
-header("Location: ../views/view_progress.php?message=Rutina creada con éxito");
+    // Confirmar la transacción
+    $conn->commit();
+    header("Location: ../views/dashboard.php?message=Rutina creada con éxito");
+    exit();
+} catch (PDOException $e) {
+    // Revertir la transacción en caso de error
+    $conn->rollBack();
+    echo "Error: " . $e->getMessage();
+}
 ?>
