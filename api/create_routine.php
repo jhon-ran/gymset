@@ -18,10 +18,13 @@ try {
 
     // Iterar sobre los días de la semana
     for ($i = 0; $i < 7; $i++) {
+        // Variable intermedia para el día de la semana
+        $day_of_week = $i + 1; // Ahora esta es una variable, no una expresión
+
         // Insertar una rutina diaria para cada día de la semana
         $stmt = $conn->prepare("INSERT INTO daily_routines (weekly_routine_id, day_of_week) VALUES (:weekly_routine_id, :day_of_week)");
         $stmt->bindParam(':weekly_routine_id', $weekly_routine_id);
-        $stmt->bindParam(':day_of_week', $i + 1);
+        $stmt->bindParam(':day_of_week', $day_of_week); // Usamos la variable intermedia aquí
         $stmt->execute();
         $daily_routine_id = $conn->lastInsertId();
 
@@ -53,3 +56,4 @@ try {
     echo "Error: " . $e->getMessage();
 }
 ?>
+

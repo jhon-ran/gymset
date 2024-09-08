@@ -30,6 +30,7 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
       <h4>Gestión de Rutinas</h4>
       <ul class="list-group">
         <li class="list-group-item"><a href="create_routine.php">Crear Nueva Rutina Semanal</a></li>
+        <li class="list-group-item"><a href="enter_progress.php">Ingresar Progreso Diario</a></li>
         <li class="list-group-item"><a href="view_progress.php">Ver Progreso</a></li>
       </ul>
     </div>

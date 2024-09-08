@@ -5,61 +5,57 @@ session_start();
 
 $user_id = $_SESSION['user_id'];
 
-// Obtener las rutinas semanales del usuario utilizando PDO
-$stmt = $conn->prepare("SELECT * FROM weekly_routines WHERE user_id = :user_id ORDER BY week_start_date DESC");
+// Obtener rutinas semanales del usuario
+$stmt = $conn->prepare("SELECT * FROM weekly_routines WHERE user_id = :user_id");
 $stmt->bindParam(':user_id', $user_id);
 $stmt->execute();
 $weekly_routines = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
+
 <body>
 <div class="container">
-  <h2>Progreso de Rutina</h2>
+  <h2>Progreso Semanal</h2>
 
-  <?php
-  foreach ($weekly_routines as $weekly_routine) {
-      echo "<h3>Semana del " . htmlspecialchars($weekly_routine['week_start_date']) . "</h3>";
+  <?php foreach ($weekly_routines as $routine): ?>
+    <h3>Semana de <?php echo $routine['week_start_date']; ?></h3>
 
-      $weekly_routine_id = $weekly_routine['id'];
+    <?php
+    // Obtener los días de la rutina semanal
+    $stmt = $conn->prepare("SELECT * FROM daily_routines WHERE weekly_routine_id = :weekly_routine_id");
+    $stmt->bindParam(':weekly_routine_id', $routine['id']);
+    $stmt->execute();
+    $daily_routines = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    ?>
 
-      // Obtener rutinas diarias para cada semana
-      $stmt_daily = $conn->prepare("SELECT * FROM daily_routines WHERE weekly_routine_id = :weekly_routine_id");
-      $stmt_daily->bindParam(':weekly_routine_id', $weekly_routine_id);
-      $stmt_daily->execute();
-      $daily_routines = $stmt_daily->fetchAll(PDO::FETCH_ASSOC);
+    <?php foreach ($daily_routines as $daily_routine): ?>
+      <h4>Día <?php echo $daily_routine['day_of_week']; ?></h4>
 
-      foreach ($daily_routines as $daily_routine) {
-          $day_of_week = $daily_routine['day_of_week'];
-          $days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+      <?php
+      // Obtener el progreso de cada ejercicio del día
+      $stmt = $conn->prepare("SELECT p.*, e.name 
+                              FROM progress p 
+                              JOIN routine_exercises re ON p.routine_exercise_id = re.id 
+                              JOIN exercises e ON re.exercise_id = e.id 
+                              WHERE re.daily_routine_id = :daily_routine_id");
+      $stmt->bindParam(':daily_routine_id', $daily_routine['id']);
+      $stmt->execute();
+      $progress = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      ?>
 
-          echo "<h4>" . $days[$day_of_week - 1] . "</h4>";
+      <?php if ($progress): ?>
+        <ul>
+          <?php foreach ($progress as $entry): ?>
+            <li><?php echo htmlspecialchars($entry['name']); ?>: <?php echo htmlspecialchars($entry['repetitions']); ?> repeticiones, <?php echo htmlspecialchars($entry['weight']); ?> kg</li>
+          <?php endforeach; ?>
+        </ul>
+      <?php else: ?>
+        <p>No se ha registrado progreso para este día.</p>
+      <?php endif; ?>
 
-          $daily_routine_id = $daily_routine['id'];
+    <?php endforeach; ?>
+    <hr>
+  <?php endforeach; ?>
 
-          // Obtener ejercicios de cada rutina diaria
-          $stmt_exercises = $conn->prepare("SELECT exercises.name, routine_exercises.repetitions, routine_exercises.weight 
-                                            FROM routine_exercises 
-                                            JOIN exercises ON routine_exercises.exercise_id = exercises.id 
-                                            WHERE routine_exercises.daily_routine_id = :daily_routine_id");
-          $stmt_exercises->bindParam(':daily_routine_id', $daily_routine_id);
-          $stmt_exercises->execute();
-          $exercises = $stmt_exercises->fetchAll(PDO::FETCH_ASSOC);
-
-          if ($exercises) {
-              echo "<table class='table table-striped'>";
-              echo "<thead><tr><th>Ejercicio</th><th>Repeticiones</th><th>Peso (kg)</th></tr></thead>";
-              echo "<tbody>";
-
-              foreach ($exercises as $exercise) {
-                  echo "<tr><td>" . htmlspecialchars($exercise['name']) . "</td><td>" . htmlspecialchars($exercise['repetitions']) . "</td><td>" . htmlspecialchars($exercise['weight']) . "</td></tr>";
-              }
-
-              echo "</tbody></table>";
-          } else {
-              echo "<p>No hay ejercicios registrados para este día.</p>";
-          }
-      }
-  }
-  ?>
 </div>
 <?php include('../includes/footer.php'); ?>
 </body>
