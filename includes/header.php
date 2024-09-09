@@ -1,6 +1,6 @@
 <?php
 //url para conexión en hosting
-//$url_base = "/xpert/";
+$url_base = "/gymset/";
 //url de base en localhost para concatenar en la navbar y evitar errores de redirección (dinámica)
 //$url_base = "http://localhost/xpert/";
 
@@ -63,22 +63,22 @@
                     <div class="collapse navbar-collapse" id="navbarNav">
                         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                             <li class="nav-item">
-                                <a class="nav-link" href="dashboard.php">Dashboard</a>
+                                <a class="nav-link" href="<?php echo $url_base; ?>dashboard.php">Dashboard</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="create_routine.php">Crear Rutina</a>
+                                <a class="nav-link" href="<?php echo $url_base; ?>create_routine.php">Crear Rutina</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="enter_progress.php">Ingresar Progreso Diario</a>
+                                <a class="nav-link" href="<?php echo $url_base; ?>enter_progress.php">Ingresar Progreso Diario</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="view_progress.php">Ver Progreso</a>
+                                <a class="nav-link" href="<?php echo $url_base; ?>view_progress.php">Ver Progreso</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="create_exercise.php">Agregar Ejercicio</a>
+                                <a class="nav-link" href="<?php echo $url_base; ?>create_exercise.php">Agregar Ejercicio</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="view_exercises.php">Ver Ejercicios</a>
+                                <a class="nav-link" href="<?php echo $url_base; ?>view_exercises.php">Ver Ejercicios</a>
                             </li>
                         </ul>
                         <!-- Elemento de cerrar sesión alineado a la derecha -->
