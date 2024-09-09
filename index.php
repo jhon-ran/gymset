@@ -2,12 +2,21 @@
 <body>
   <!-- Barra de navegación -->
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="index.php">Gestión de Ejercicio</a>
-    <div class="collapse navbar-collapse">
-      <ul class="navbar-nav ml-auto">
-        <li class="nav-item"><a class="nav-link" href="views/register.php">Registro</a></li>
-        <li class="nav-item"><a class="nav-link" href="views/login.php">Iniciar Sesión</a></li>
-      </ul>
+    <div class="container-fluid">
+      <a class="navbar-brand" href="index.php">Gestión de Ejercicio</a>
+      
+      <!-- Botón hamburguesa para pantallas pequeñas -->
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <!-- Contenido de la barra de navegación -->
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto"> <!-- Cambiado de 'ml-auto' a 'ms-auto' para Bootstrap 5 -->
+          <li class="nav-item"><a class="nav-link" href="views/register.php">Registro</a></li>
+          <li class="nav-item"><a class="nav-link" href="views/login.php">Iniciar Sesión</a></li>
+        </ul>
+      </div>
     </div>
   </nav>
 
