@@ -1,9 +1,15 @@
 <?php
-// Configuración de la base de datos
-$host = 'localhost';
-$dbname = 'gymset';
-$username = 'usuario';
-$password = 'contraseña';
+//Descomentar para servidor remoto
+$host = '127.0.0.1:3306';
+$dbname = 'u878617270_gymset';
+$username = 'u878617270_gymbro';
+$password = '6Q~ipXQZWz';
+
+// Configuración de la base de datos local
+//$host = 'localhost';
+//$dbname = 'gymset';
+//$username = 'usuario';
+//$password = 'contraseña';
 
 try {
     // Creación de la conexión PDO

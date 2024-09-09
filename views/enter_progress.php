@@ -38,10 +38,11 @@ $selected_day_of_week = $_GET['day_of_week'] ?? $_POST['day_of_week'] ?? null;
 
   <?php if ($selected_weekly_routine_id): 
     // Obtener los días de la rutina semanal seleccionada
-    $stmt = $conn->prepare("SELECT * FROM daily_routines WHERE weekly_routine_id = :weekly_routine_id");
-    $stmt->bindParam(':weekly_routine_id', $selected_weekly_routine_id);
-    $stmt->execute();
-    $daily_routines = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// Obtener todos los días de la rutina semanal seleccionada
+  $stmt = $conn->prepare("SELECT * FROM daily_routines WHERE weekly_routine_id = :weekly_routine_id AND is_rest_day = 0");
+  $stmt->bindParam(':weekly_routine_id', $selected_weekly_routine_id);
+  $stmt->execute();
+  $daily_routines = $stmt->fetchAll(PDO::FETCH_ASSOC);
   ?>
 
   <!-- Seleccionar día de la semana -->
