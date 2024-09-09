@@ -58,10 +58,15 @@ $url_base = "/gymset/views/";
                         aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
                     </button>
-
                     <!-- Contenido de la barra de navegación -->
                     <div class="collapse navbar-collapse" id="navbarNav">
                         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                            <li class="nav-item">
+                                <a class="nav-link" href="<?php echo $url_base; ?>register.php">Registro</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="<?php echo $url_base; ?>login.php">Iniciar Sesión</a>
+                            </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="<?php echo $url_base; ?>dashboard.php">Dashboard</a>
                             </li>
