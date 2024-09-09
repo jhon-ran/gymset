@@ -49,25 +49,43 @@
     <body>
         <header>
             <nav class="navbar navbar-expand-lg navbar-light bg-light">
-                <a class="navbar-brand" href="dashboard.php">Inicio</a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a class="nav-link" href="create_routine.php">Crear Rutina Semanal</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="view_progress.php">Ver Progreso</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="enter_progress.php">Ingresar Progreso Diario</a> <!-- Nuevo enlace -->
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="../api/logout.php">Cerrar Sesión</a>
-                        </li>
-                    </ul>
+                <div class="container-fluid">
+                    <!-- Logo o nombre del sitio -->
+                    <a class="navbar-brand" href="#">GymSet</a>
+
+                    <!-- Botón hamburguesa para pantallas pequeñas -->
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <!-- Contenido de la barra de navegación -->
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                            <li class="nav-item">
+                                <a class="nav-link" href="dashboard.php">Dashboard</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="create_routine.php">Crear Rutina</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="enter_progress.php">Ingresar Progreso Diario</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="view_progress.php">Ver Progreso</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="create_exercise.php">Agregar Ejercicio</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="view_exercises.php">Ver Ejercicios</a>
+                            </li>
+                        </ul>
+                        <!-- Elemento de cerrar sesión alineado a la derecha -->
+                        <form class="d-flex" action="../api/logout.php" method="POST">
+                            <button class="btn btn-outline-danger" type="submit">Cerrar Sesión</button>
+                        </form>
+                    </div>
                 </div>
             </nav>
         </header> 
