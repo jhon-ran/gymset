@@ -1,9 +1,10 @@
 <?php 
-include('../includes/header.php'); 
+
 include('../includes/db.php');
 session_start();
 ?>
 
+<?php include('../includes/header.php');?>
 <body>
 <div class="container">
   <h2>Crear Nuevo Ejercicio</h2>

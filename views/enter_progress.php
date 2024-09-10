@@ -1,5 +1,4 @@
 <?php 
-include('../includes/header.php'); 
 include('../includes/db.php');
 session_start();
 
@@ -16,6 +15,7 @@ $selected_weekly_routine_id = $_GET['weekly_routine_id'] ?? $_POST['weekly_routi
 $selected_day_of_week = $_GET['day_of_week'] ?? $_POST['day_of_week'] ?? null;
 ?>
 
+<?php include('../includes/header.php');?>
 <body>
 <div class="container">
   <h2>Ingresar Progreso Diario</h2>

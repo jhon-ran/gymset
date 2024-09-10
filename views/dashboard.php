@@ -1,5 +1,4 @@
-<?php 
-include('../includes/header.php'); 
+<?php  
 include('../includes/db.php');
 session_start();
 
@@ -17,6 +16,7 @@ $stmt->execute();
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 ?>
 
+<?php include('../includes/header.php');?>
 <body>
 <div class="container">
   <div class="d-flex justify-content-between align-items-center mt-3">

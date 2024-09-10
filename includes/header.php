@@ -2,7 +2,7 @@
 //url para conexión en hosting
 $url_base = "/gymset/views/";
 //url de base en localhost para concatenar en la navbar y evitar errores de redirección (dinámica)
-//$url_base = "http://localhost/xpert/";
+//$url_base = "http://localhost/gymset/views/";
 
 //si no existe la variable de sesión usuario_id, se redirige al login
 /*if(!isset($_SESSION['usuario_id'])){
@@ -79,6 +79,9 @@ $url_base = "/gymset/views/";
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="<?php echo $url_base; ?>view_exercises.php">Ver Ejercicios</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="<?php echo $url_base; ?>manage_routines.php">Gestionar rutinas</a>
                             </li>
                         </ul>
                         <!-- Elemento de cerrar sesión alineado a la derecha -->

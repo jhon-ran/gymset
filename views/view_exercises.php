@@ -1,5 +1,4 @@
 <?php 
-include('../includes/header.php'); 
 include('../includes/db.php');
 session_start();
 
@@ -8,6 +7,8 @@ $stmt = $conn->prepare("SELECT * FROM exercises");
 $stmt->execute();
 $exercises = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
+
+<?php include('../includes/header.php');?>
 
 <body>
 <div class="container">

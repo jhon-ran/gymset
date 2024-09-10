@@ -1,9 +1,8 @@
 <?php 
-include('../includes/header.php'); 
 include('../includes/db.php'); 
 session_start();
 ?>
-
+<?php include('../includes/header.php');?>
 <body>
 <div class="container">
   <h2>Crear Nueva Rutina Semanal</h2>

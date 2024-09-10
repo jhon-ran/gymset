@@ -1,5 +1,4 @@
-<?php 
-include('../includes/header.php'); 
+<?php  
 include('../includes/db.php');
 session_start();
 
@@ -15,6 +14,7 @@ $weekly_routines = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $selected_weekly_routine_id = $_GET['weekly_routine_id'] ?? null;
 ?>
 
+<?php include('../includes/header.php');?>
 <body>
 <div class="container">
   <h2>Ver Progreso Semanal</h2>
