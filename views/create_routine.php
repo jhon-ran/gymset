@@ -3,89 +3,68 @@ include('../includes/db.php');
 session_start();
 ?>
 <?php include('../includes/header.php');?>
+
 <body>
-<div class="container">
-  <h2>Crear Nueva Rutina Semanal</h2>
-  
-  <!-- Formulario para crear la rutina semanal -->
-  <form method="POST" action="../api/create_routine.php">
-    <div class="form-group">
-      <label for="week_start_date">Fecha de Inicio:</label>
-      <input type="date" class="form-control" name="week_start_date" id="week_start_date" required>
+    <div class="container">
+        <h2>Crear Rutina Semanal</h2>
+        <form action="../api/create_routine.php" method="POST">
+            <div class="form-group">
+                <label for="week_start_date">Fecha de inicio de la semana:</label>
+                <input type="date" class="form-control" id="week_start_date" name="week_start_date" required>
+            </div>
+
+            <!-- Iteración sobre los días de la semana -->
+            <?php 
+            $days_of_week = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+            $stmt = $conn->prepare("SELECT * FROM exercises");
+            $stmt->execute();
+            $exercises = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($days_of_week as $index => $day): ?>
+                <h4><?php echo $day; ?></h4>
+                
+                <!-- Opción para marcar día de descanso -->
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="rest_day_<?php echo $index; ?>" name="rest_days[]" value="<?php echo $index; ?>" onchange="toggleDayInputs(this, <?php echo $index; ?>)">
+                    <label class="form-check-label" for="rest_day_<?php echo $index; ?>">Día de descanso</label>
+                </div>
+
+                <!-- Contenedor de Ejercicios (oculto si es día de descanso) -->
+                <div class="exercise-container" id="exercise_container_<?php echo $index; ?>">
+                    <?php foreach ($exercises as $exercise): ?>
+                        <div class="exercise-item">
+                            <label>
+                                <input type="checkbox" name="exercises[<?php echo $index; ?>][]" value="<?php echo $exercise['id']; ?>">
+                                <?php echo htmlspecialchars($exercise['name']); ?>
+                            </label>
+
+                            <div class="planned-inputs">
+                                <label for="planned_sets_<?php echo $index; ?>_<?php echo $exercise['id']; ?>">Sets Planeados:</label>
+                                <input type="number" name="planned_sets[<?php echo $index; ?>][<?php echo $exercise['id']; ?>]" min="1">
+
+                                <label for="planned_repetitions_<?php echo $index; ?>_<?php echo $exercise['id']; ?>">Repeticiones Planeadas:</label>
+                                <input type="number" name="planned_repetitions[<?php echo $index; ?>][<?php echo $exercise['id']; ?>]" min="1">
+
+                                <label for="planned_weight_<?php echo $index; ?>_<?php echo $exercise['id']; ?>">Peso Planeado:</label>
+                                <input type="number" step="0.1" name="planned_weight[<?php echo $index; ?>][<?php echo $exercise['id']; ?>]" min="0">
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <hr>
+            <?php endforeach; ?>
+
+            <button type="submit" class="btn btn-primary">Crear Rutina</button>
+        </form>
     </div>
 
-    <?php
-    // Obtener todos los ejercicios disponibles
-    $stmt = $conn->prepare("SELECT * FROM exercises");
-    $stmt->execute();
-    $exercises = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    ?>
-
-    <!-- Repetir para cada día de la semana -->
-    <?php for ($i = 0; $i < 7; $i++): ?>
-      <h4>Día <?php echo $i + 1; ?>:</h4>
-      <div class="form-group">
-        <label for="is_rest_day_<?php echo $i; ?>">Día de Descanso:</label>
-        <input type="checkbox" name="is_rest_day[<?php echo $i; ?>]" id="is_rest_day_<?php echo $i; ?>" value="1" onclick="toggleExercises(<?php echo $i; ?>)">
-      </div>
-
-      <div id="exercises_section_<?php echo $i; ?>">
-        <div class="form-group">
-          <label>Ejercicios:</label>
-          <div class="exercise-checkboxes">
-            <?php foreach ($exercises as $exercise): ?>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="exercises[<?php echo $i; ?>][]" value="<?php echo $exercise['id']; ?>" id="exercise_<?php echo $i; ?>_<?php echo $exercise['id']; ?>">
-                <label class="form-check-label" for="exercise_<?php echo $i; ?>_<?php echo $exercise['id']; ?>">
-                  <?php echo htmlspecialchars($exercise['name']); ?>
-                </label>
-              </div>
-            <?php endforeach; ?>
-          </div>
-        </div>
-
-        <!-- Campos para sets, repeticiones y peso por día -->
-        <div id="exercise_details_<?php echo $i; ?>">
-          <div class="form-group">
-            <label for="sets_<?php echo $i; ?>">Sets (para el día):</label>
-            <input type="number" class="form-control" name="sets[<?php echo $i; ?>]" id="sets_<?php echo $i; ?>" min="1" required>
-          </div>
-
-          <div class="form-group">
-            <label for="reps_<?php echo $i; ?>">Repeticiones (para el día):</label>
-            <input type="number" class="form-control" name="reps[<?php echo $i; ?>]" id="reps_<?php echo $i; ?>" min="1" required>
-          </div>
-
-          <div class="form-group">
-            <label for="weight_<?php echo $i; ?>">Peso (para el día en kg):</label>
-            <input type="number" class="form-control" name="weight[<?php echo $i; ?>]" id="weight_<?php echo $i; ?>" step="0.1" min="0" required>
-          </div>
-        </div>
-      </div>
-      <hr>
-    <?php endfor; ?>
-
-    <button type="submit" class="btn btn-primary">Crear Rutina Semanal</button>
-  </form>
-</div>
-
-<script>
-// Función para mostrar/ocultar ejercicios dependiendo si es día de descanso
-function toggleExercises(dayIndex) {
-  const checkbox = document.getElementById('is_rest_day_' + dayIndex);
-  const exercisesSection = document.getElementById('exercises_section_' + dayIndex);
-  const exerciseDetails = document.getElementById('exercise_details_' + dayIndex);
-  const inputs = exerciseDetails.querySelectorAll('input');
-
-  if (checkbox.checked) {
-    exercisesSection.style.display = 'none';
-    inputs.forEach(input => input.disabled = true); // Desactivar inputs cuando es día de descanso
-  } else {
-    exercisesSection.style.display = 'block';
-    inputs.forEach(input => input.disabled = false); // Activar inputs cuando no es día de descanso
-  }
-}
-</script>
+    <script>
+        // Función para mostrar u ocultar los ejercicios si es día de descanso
+        function toggleDayInputs(checkbox, dayIndex) {
+            const container = document.getElementById(`exercise_container_${dayIndex}`);
+            container.style.display = checkbox.checked ? 'none' : 'block';
+        }
+    </script>
+</body>
 
 <?php include('../includes/footer.php'); ?>
-</body>

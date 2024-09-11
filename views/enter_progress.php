@@ -4,113 +4,134 @@ session_start();
 
 $user_id = $_SESSION['user_id'];
 
-// Obtener las rutinas semanales del usuario
-$stmt = $conn->prepare("SELECT * FROM weekly_routines WHERE user_id = :user_id");
-$stmt->bindParam(':user_id', $user_id);
-$stmt->execute();
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exercise_id'])) {
+    // Guardar progreso por ejercicio
+    $daily_routine_id = $_POST['daily_routine_id'];
+    $exercise_id = $_POST['exercise_id'];
+    $actual_sets = $_POST['actual_sets'];
+    $actual_repetitions = $_POST['actual_repetitions'];
+    $actual_weight = $_POST['actual_weight'];
+    $user_id = $_SESSION['user_id'];
+    $day_of_week = $_POST['day_of_week'];
+
+    // Comprobar si ya existe un progreso para este ejercicio
+    $stmt = $conn->prepare("SELECT * FROM progress WHERE user_id = ? AND daily_routine_id = ? AND exercise_id = ? AND day_of_week = ?");
+    $stmt->execute([$user_id, $daily_routine_id, $exercise_id, $day_of_week]);
+    $existing_progress = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($existing_progress) {
+        // Actualizar el progreso existente
+        $stmt = $conn->prepare("UPDATE progress SET actual_sets = ?, actual_repetitions = ?, actual_weight = ? WHERE user_id = ? AND daily_routine_id = ? AND exercise_id = ? AND day_of_week = ?");
+        $stmt->execute([$actual_sets, $actual_repetitions, $actual_weight, $user_id, $daily_routine_id, $exercise_id, $day_of_week]);
+    } else {
+        // Insertar nuevo progreso
+        $stmt = $conn->prepare("INSERT INTO progress (user_id, daily_routine_id, exercise_id, day_of_week, actual_sets, actual_repetitions, actual_weight, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
+        $stmt->execute([$user_id, $daily_routine_id, $exercise_id, $day_of_week, $actual_sets, $actual_repetitions, $actual_weight]);
+    }
+
+    echo "<div class='alert alert-success'>Progreso guardado correctamente para el ejercicio " . htmlspecialchars($_POST['exercise_name']) . ".</div>";
+}
+
+// Obtener todas las rutinas semanales creadas por el usuario
+$stmt = $conn->prepare("SELECT * FROM weekly_routines WHERE user_id = ?");
+$stmt->execute([$_SESSION['user_id']]);
 $weekly_routines = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Obtener la rutina semanal y el día seleccionados, si existen
-$selected_weekly_routine_id = $_GET['weekly_routine_id'] ?? $_POST['weekly_routine_id'] ?? null;
-$selected_day_of_week = $_GET['day_of_week'] ?? $_POST['day_of_week'] ?? null;
+if (isset($_POST['weekly_routine_id']) && isset($_POST['day_of_week'])) {
+    $weekly_routine_id = $_POST['weekly_routine_id'];
+    $day_of_week = $_POST['day_of_week'];
+
+    // Obtener la rutina diaria correspondiente a la rutina semanal y al día seleccionado
+    $stmt = $conn->prepare("SELECT * FROM daily_routines WHERE weekly_routine_id = ? AND day_of_week = ?");
+    $stmt->execute([$weekly_routine_id, $day_of_week]);
+    $daily_routine = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($daily_routine) {
+        // Obtener los ejercicios de la rutina diaria
+        $stmt = $conn->prepare("SELECT re.*, e.name FROM routine_exercises re JOIN exercises e ON re.exercise_id = e.id WHERE re.daily_routine_id = ?");
+        $stmt->execute([$daily_routine['id']]);
+        $exercises = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Cargar el progreso existente si hay alguno
+        $progress = [];
+        $stmt = $conn->prepare("SELECT * FROM progress WHERE daily_routine_id = ? AND day_of_week = ?");
+        $stmt->execute([$daily_routine['id'], $day_of_week]);
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $progress[$row['exercise_id']] = $row;
+        }
+    } else {
+        echo "Rutina diaria no encontrada.";
+    }
+}
 ?>
 
-<?php include('../includes/header.php');?>
-<body>
-<div class="container">
-  <h2>Ingresar Progreso Diario</h2>
-  
-  <!-- Seleccionar la rutina semanal -->
-  <form method="GET" action="enter_progress.php">
-    <div class="form-group">
-      <label for="weekly_routine_id">Seleccionar Rutina Semanal:</label>
-      <select class="form-control" name="weekly_routine_id" id="weekly_routine_id" required>
-        <option value="">--Seleccione una rutina--</option>
-        <?php foreach ($weekly_routines as $routine): ?>
-          <option value="<?php echo $routine['id']; ?>" <?php echo ($routine['id'] == $selected_weekly_routine_id) ? 'selected' : ''; ?>>
-            Semana de <?php echo $routine['week_start_date']; ?>
-          </option>
+<?php include('../includes/header.php'); ?>
+
+<div class="container mt-4">
+    <h2>Ingresar Progreso Diario</h2>
+
+    <?php if (isset($weekly_routine_id) && isset($day_of_week) && isset($daily_routine)): ?>
+        <!-- Mostrar el formulario para ingresar el progreso del día seleccionado -->
+        <?php foreach ($exercises as $exercise): ?>
+            <form action="enter_progress.php" method="POST" class="mb-4">
+                <input type="hidden" name="daily_routine_id" value="<?php echo $daily_routine['id']; ?>">
+                <input type="hidden" name="exercise_id" value="<?php echo $exercise['exercise_id']; ?>">
+                <input type="hidden" name="day_of_week" value="<?php echo $day_of_week; ?>">
+                <input type="hidden" name="exercise_name" value="<?php echo htmlspecialchars($exercise['name']); ?>">
+
+                <h5><?php echo htmlspecialchars($exercise['name']); ?></h5>
+                <p><strong>Sets Planeados:</strong> <?php echo htmlspecialchars($exercise['planned_sets']); ?></p>
+                <p><strong>Repeticiones Planeadas:</strong> <?php echo htmlspecialchars($exercise['planned_repetitions']); ?></p>
+                <p><strong>Peso Planeado:</strong> <?php echo htmlspecialchars($exercise['planned_weight']); ?></p>
+
+                <div class="form-group">
+                    <label for="sets_<?php echo $exercise['exercise_id']; ?>">Sets Realizados</label>
+                    <input type="number" class="form-control" name="actual_sets" id="sets_<?php echo $exercise['exercise_id']; ?>" value="<?php echo isset($progress[$exercise['exercise_id']]) ? $progress[$exercise['exercise_id']]['actual_sets'] : ''; ?>" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="repetitions_<?php echo $exercise['exercise_id']; ?>">Repeticiones Realizadas</label>
+                    <input type="number" class="form-control" name="actual_repetitions" id="repetitions_<?php echo $exercise['exercise_id']; ?>" value="<?php echo isset($progress[$exercise['exercise_id']]) ? $progress[$exercise['exercise_id']]['actual_repetitions'] : ''; ?>" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="weight_<?php echo $exercise['exercise_id']; ?>">Peso Usado</label>
+                    <input type="number" step="0.01" class="form-control" name="actual_weight" id="weight_<?php echo $exercise['exercise_id']; ?>" value="<?php echo isset($progress[$exercise['exercise_id']]) ? $progress[$exercise['exercise_id']]['actual_weight'] : ''; ?>" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Guardar Progreso</button>
+            </form>
         <?php endforeach; ?>
-      </select>
-    </div>
-    <button type="submit" class="btn btn-primary">Cargar Rutina</button>
-  </form>
+    <?php else: ?>
+        <!-- Formulario para seleccionar la rutina semanal y el día -->
+        <form action="enter_progress.php" method="POST">
+            <div class="form-group">
+                <label for="weekly_routine_id">Selecciona una Rutina Semanal</label>
+                <select name="weekly_routine_id" id="weekly_routine_id" class="form-control" required>
+                    <?php foreach ($weekly_routines as $routine): ?>
+                        <option value="<?php echo $routine['id']; ?>">
+                            <?php echo htmlspecialchars($routine['week_start_date']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
 
-  <?php if ($selected_weekly_routine_id): 
-    // Obtener los días de la rutina semanal seleccionada
-// Obtener todos los días de la rutina semanal seleccionada
-  $stmt = $conn->prepare("SELECT * FROM daily_routines WHERE weekly_routine_id = :weekly_routine_id AND is_rest_day = 0");
-  $stmt->bindParam(':weekly_routine_id', $selected_weekly_routine_id);
-  $stmt->execute();
-  $daily_routines = $stmt->fetchAll(PDO::FETCH_ASSOC);
-  ?>
+            <div class="form-group">
+                <label for="day_of_week">Selecciona un Día</label>
+                <select name="day_of_week" id="day_of_week" class="form-control" required>
+                    <option value="1">Lunes</option>
+                    <option value="2">Martes</option>
+                    <option value="3">Miércoles</option>
+                    <option value="4">Jueves</option>
+                    <option value="5">Viernes</option>
+                    <option value="6">Sábado</option>
+                    <option value="7">Domingo</option>
+                </select>
+            </div>
 
-  <!-- Seleccionar día de la semana -->
-  <form method="GET" action="enter_progress.php">
-    <input type="hidden" name="weekly_routine_id" value="<?php echo $selected_weekly_routine_id; ?>">
-    <div class="form-group">
-      <label for="day_of_week">Seleccionar Día:</label>
-      <select class="form-control" name="day_of_week" id="day_of_week" required>
-        <option value="">--Seleccione un día--</option>
-        <?php foreach ($daily_routines as $daily_routine): ?>
-          <option value="<?php echo $daily_routine['day_of_week']; ?>" <?php echo ($daily_routine['day_of_week'] == $selected_day_of_week) ? 'selected' : ''; ?>>
-            Día <?php echo $daily_routine['day_of_week']; ?>
-          </option>
-        <?php endforeach; ?>
-      </select>
-    </div>
-    <button type="submit" class="btn btn-primary">Cargar Día</button>
-  </form>
-
-  <?php 
-    if ($selected_day_of_week): 
-      // Obtener los ejercicios del día seleccionado
-      $stmt = $conn->prepare("SELECT re.id as routine_exercise_id, e.name 
-                              FROM routine_exercises re 
-                              JOIN exercises e ON re.exercise_id = e.id 
-                              WHERE re.daily_routine_id = (SELECT id FROM daily_routines WHERE weekly_routine_id = :weekly_routine_id AND day_of_week = :day_of_week)");
-      $stmt->bindParam(':weekly_routine_id', $selected_weekly_routine_id);
-      $stmt->bindParam(':day_of_week', $selected_day_of_week);
-      $stmt->execute();
-      $exercises = $stmt->fetchAll(PDO::FETCH_ASSOC);
-  ?>
-
-  <!-- Formulario para ingresar progreso de ejercicios del día seleccionado -->
-  <?php foreach ($exercises as $exercise): 
-    // Obtener el progreso del ejercicio si ya existe
-    $stmt = $conn->prepare("SELECT * FROM progress WHERE routine_exercise_id = :routine_exercise_id ORDER BY progress_date DESC LIMIT 1");
-    $stmt->bindParam(':routine_exercise_id', $exercise['routine_exercise_id']);
-    $stmt->execute();
-    $progress = $stmt->fetch(PDO::FETCH_ASSOC);
-  ?>
-    <form action="../api/save_progress.php" method="post" class="form-inline">
-      <input type="hidden" name="routine_exercise_id" value="<?php echo $exercise['routine_exercise_id']; ?>">
-      <input type="hidden" name="weekly_routine_id" value="<?php echo $selected_weekly_routine_id; ?>">
-      <input type="hidden" name="day_of_week" value="<?php echo $selected_day_of_week; ?>">
-      <h4><?php echo htmlspecialchars($exercise['name']); ?></h4>
-      
-      <div class="form-group">
-        <label for="sets_<?php echo $exercise['routine_exercise_id']; ?>">Sets realizados:</label>
-        <input type="number" class="form-control" name="sets" id="sets_<?php echo $exercise['routine_exercise_id']; ?>" value="<?php echo $progress ? $progress['sets'] : ''; ?>" required>
-      </div>
-
-      <div class="form-group">
-        <label for="repetitions_<?php echo $exercise['routine_exercise_id']; ?>">Repeticiones realizadas por set:</label>
-        <input type="number" class="form-control" name="repetitions" id="repetitions_<?php echo $exercise['routine_exercise_id']; ?>" value="<?php echo $progress ? $progress['repetitions'] : ''; ?>" required>
-      </div>
-
-      <div class="form-group">
-        <label for="weight_<?php echo $exercise['routine_exercise_id']; ?>">Peso utilizado (kg):</label>
-        <input type="number" class="form-control" name="weight" id="weight_<?php echo $exercise['routine_exercise_id']; ?>" value="<?php echo $progress ? $progress['weight'] : ''; ?>" step="0.01" required>
-      </div>
-
-      <button type="submit" class="btn btn-primary">Guardar Progreso</button>
-    </form>
-    <hr>
-  <?php endforeach; ?>
-  <?php endif; ?>
-
-  <?php endif; ?>
+            <button type="submit" class="btn btn-primary">Seleccionar Rutina</button>
+        </form>
+    <?php endif; ?>
 </div>
+
 <?php include('../includes/footer.php'); ?>
-</body>
