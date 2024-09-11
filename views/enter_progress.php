@@ -29,7 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exercise_id'])) {
         $stmt->execute([$user_id, $daily_routine_id, $exercise_id, $day_of_week, $actual_sets, $actual_repetitions, $actual_weight]);
     }
 
-    echo "<div class='alert alert-success'>Progreso guardado correctamente para el ejercicio " . htmlspecialchars($_POST['exercise_name']) . ".</div>";
+    // Responder a la solicitud AJAX
+    echo json_encode(["message" => "Progreso guardado correctamente para el ejercicio " . htmlspecialchars($_POST['exercise_name']) . "."]);
+    exit();
 }
 
 // Obtener todas las rutinas semanales creadas por el usuario
@@ -73,7 +75,7 @@ if (isset($_POST['weekly_routine_id']) && isset($_POST['day_of_week'])) {
     <?php if (isset($weekly_routine_id) && isset($day_of_week) && isset($daily_routine)): ?>
         <!-- Mostrar el formulario para ingresar el progreso del día seleccionado -->
         <?php foreach ($exercises as $exercise): ?>
-            <form action="enter_progress.php" method="POST" class="mb-4">
+            <form action="enter_progress.php" method="POST" class="mb-4" onsubmit="saveProgress(event, this);">
                 <input type="hidden" name="daily_routine_id" value="<?php echo $daily_routine['id']; ?>">
                 <input type="hidden" name="exercise_id" value="<?php echo $exercise['exercise_id']; ?>">
                 <input type="hidden" name="day_of_week" value="<?php echo $day_of_week; ?>">
@@ -100,6 +102,7 @@ if (isset($_POST['weekly_routine_id']) && isset($_POST['day_of_week'])) {
                 </div>
 
                 <button type="submit" class="btn btn-primary">Guardar Progreso</button>
+                <div class="result-message" style="display: none;"></div>
             </form>
         <?php endforeach; ?>
     <?php else: ?>
@@ -133,5 +136,30 @@ if (isset($_POST['weekly_routine_id']) && isset($_POST['day_of_week'])) {
         </form>
     <?php endif; ?>
 </div>
+
+<script>
+function saveProgress(event, form) {
+    event.preventDefault();
+
+    const formData = new FormData(form);
+    const resultMessage = form.querySelector('.result-message');
+
+    fetch('enter_progress.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        resultMessage.textContent = data.message;
+        resultMessage.style.display = 'block';
+        resultMessage.classList.add('alert', 'alert-success');
+    })
+    .catch(error => {
+        resultMessage.textContent = 'Error al guardar el progreso.';
+        resultMessage.style.display = 'block';
+        resultMessage.classList.add('alert', 'alert-danger');
+    });
+}
+</script>
 
 <?php include('../includes/footer.php'); ?>
