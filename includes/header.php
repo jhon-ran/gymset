@@ -32,7 +32,7 @@ $url_base = "/gymset/views/";
             crossorigin="anonymous"
         />
         <!-- estilo para personalizar -->
-        <link rel="stylesheet" href="../../style.css">
+        <!--<link rel="stylesheet" href="../../style.css">-->
         <!-- estilo para personalizar y que index.php puede acceder a él -->
         <link rel="stylesheet" href="style.css">
         <!-- font awesome -->

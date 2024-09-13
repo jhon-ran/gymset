@@ -19,31 +19,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Inserta la rutina semanal
         $stmt = $conn->prepare("INSERT INTO weekly_routines (user_id, week_start_date) VALUES (?, ?)");
         $stmt->execute([$user_id, $week_start_date]);
-        $weekly_routine_id = $conn->lastInsertId();
+        $weekly_routine_id = $conn->lastInsertId();  // Cambiado a $conn->lastInsertId()
 
-        // Verifica si $_POST contiene los días de descanso y los ejercicios
-        if (!empty($_POST['exercises'])) {
-            foreach ($_POST['exercises'] as $day => $exercise_ids) {
-                if (!isset($_POST['rest_days']) || !in_array($day, $_POST['rest_days'])) {  // Verifica si no es un día de descanso
-                    // Inserta la rutina diaria
-                    $stmt = $conn->prepare("INSERT INTO daily_routines (weekly_routine_id, day_of_week) VALUES (?, ?)");
-                    $stmt->execute([$weekly_routine_id, $day + 1]);
-                    $daily_routine_id = $conn->lastInsertId();
+        // Iterar sobre los días de la rutina (1 al 7)
+        for ($day_number = 1; $day_number <= 7; $day_number++) {
+            $is_rest_day = isset($_POST['rest_days']) && in_array($day_number, $_POST['rest_days']) ? 1 : 0;
 
-                    // Inserta los ejercicios para ese día
-                    foreach ($exercise_ids as $exercise_id) {
-                        $planned_sets = $_POST['planned_sets'][$day][$exercise_id];
-                        $planned_repetitions = $_POST['planned_repetitions'][$day][$exercise_id];
-                        $planned_weight = $_POST['planned_weight'][$day][$exercise_id];
+            // Inserta la rutina diaria con el indicador de descanso
+            $stmt = $conn->prepare("INSERT INTO daily_routines (weekly_routine_id, day_of_week, is_rest_day) VALUES (?, ?, ?)");
+            $stmt->execute([$weekly_routine_id, $day_number, $is_rest_day]);
+            $daily_routine_id = $conn->lastInsertId();  // Cambiado a $conn->lastInsertId()
 
-                        // Inserta los datos de los ejercicios planeados
-                        $stmt = $conn->prepare("INSERT INTO routine_exercises (daily_routine_id, exercise_id, planned_sets, planned_repetitions, planned_weight) VALUES (?, ?, ?, ?, ?)");
-                        $stmt->execute([$daily_routine_id, $exercise_id, $planned_sets, $planned_repetitions, $planned_weight]);
-                    }
-                } else {
-                    // Inserta un registro para el día de descanso si se desea mantener consistencia
-                    $stmt = $conn->prepare("INSERT INTO daily_routines (weekly_routine_id, day_of_week) VALUES (?, ?)");
-                    $stmt->execute([$weekly_routine_id, $day + 1]);
+            // Si no es un día de descanso, insertar los ejercicios
+            if (!$is_rest_day && !empty($_POST['exercises'][$day_number])) {
+                foreach ($_POST['exercises'][$day_number] as $exercise_id) {
+                    $planned_sets = $_POST['planned_sets'][$day_number][$exercise_id];
+                    $planned_repetitions = $_POST['planned_repetitions'][$day_number][$exercise_id];
+                    $planned_weight = $_POST['planned_weight'][$day_number][$exercise_id];
+
+                    // Inserta los datos de los ejercicios planeados
+                    $stmt = $conn->prepare("INSERT INTO routine_exercises (daily_routine_id, exercise_id, planned_sets, planned_repetitions, planned_weight) VALUES (?, ?, ?, ?, ?)");
+                    $stmt->execute([$daily_routine_id, $exercise_id, $planned_sets, $planned_repetitions, $planned_weight]);
                 }
             }
         }

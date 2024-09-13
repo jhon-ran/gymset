@@ -122,13 +122,13 @@ if (isset($_POST['weekly_routine_id']) && isset($_POST['day_of_week'])) {
             <div class="form-group">
                 <label for="day_of_week">Selecciona un Día</label>
                 <select name="day_of_week" id="day_of_week" class="form-control" required>
-                    <option value="1">Lunes</option>
-                    <option value="2">Martes</option>
-                    <option value="3">Miércoles</option>
-                    <option value="4">Jueves</option>
-                    <option value="5">Viernes</option>
-                    <option value="6">Sábado</option>
-                    <option value="7">Domingo</option>
+                    <option value="1">Día 1</option>
+                    <option value="2">Día 2</option>
+                    <option value="3">Día 3</option>
+                    <option value="4">Día 4</option>
+                    <option value="5">Día 5</option>
+                    <option value="6">Día 6</option>
+                    <option value="7">Día 7</option>
                 </select>
             </div>
 
